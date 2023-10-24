@@ -1,10 +1,10 @@
 from quart import Quart
-from cars.models.modelc import CarsModel
-from cars.getcars import getcarsb
-from cars.getcar import getcarb
-from cars.postcar import postcarb
-from cars.deletecar import deletecarb
-from cars.healthcheck import healthcheckb
+from cars.models.modelsClass import CarsModel
+from cars.interface.getCars import getcarsb
+from cars.interface.getCar import getcarb
+from cars.interface.postCar import postcarb
+from cars.interface.deleteCar import deletecarb
+from cars.interface.healthCheck import healthcheckb
 
 app = Quart(__name__)
 app.register_blueprint(getcarsb)
