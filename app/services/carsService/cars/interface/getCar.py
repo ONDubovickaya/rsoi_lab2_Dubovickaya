@@ -4,7 +4,6 @@ from cars.models.modelsClass import CarsModel
 
 getcarb = Blueprint('get_car', __name__, )
 
-
 @getcarb.route('/api/v1/cars/<string:carUid>', methods=['GET'])
 async def get_car(carUid: str) -> Response:
     try:
