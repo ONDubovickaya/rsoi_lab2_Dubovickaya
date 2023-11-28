@@ -13,7 +13,6 @@ app.register_blueprint(postcarb)
 app.register_blueprint(deletecarb)
 app.register_blueprint(healthcheckb)
 
-
 def create_tables():
     CarsModel.drop_table()
     CarsModel.create_table()
@@ -29,7 +28,6 @@ def create_tables():
         price=3500,
         availability=True
     )
-
 
 if __name__ == '__main__':
     create_tables()
