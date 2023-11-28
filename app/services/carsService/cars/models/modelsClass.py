@@ -1,7 +1,6 @@
 from peewee import *
 from .modelsDB import BaseModel
 
-
 class CarsModel(BaseModel):
     id = IdentityField()
     car_uid = UUIDField(unique=True, null=False)
