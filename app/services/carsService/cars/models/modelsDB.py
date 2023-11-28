@@ -9,7 +9,6 @@ pg_db = PostgresqlDatabase(
     port=int(os.getenv('DATA_BASE_PORT'))
 )
 
-
 class BaseModel(Model):
     class Meta:
         database = pg_db
