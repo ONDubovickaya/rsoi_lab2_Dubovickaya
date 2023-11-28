@@ -4,7 +4,6 @@ from cars.models.modelsClass import CarsModel
 
 deletecarb = Blueprint('delete_car_order', __name__, )
 
-
 @deletecarb.route('/api/v1/cars/<string:carUid>/order', methods=['DELETE'])
 async def delete_car_order(carUid: str) -> Response:
     try:
