@@ -4,7 +4,6 @@ from cars.models.modelsClass import CarsModel
 
 getcarsb = Blueprint('get_cars', __name__, )
 
-
 def validate_args(args):
     errors = []
     if 'page' in args.keys():
