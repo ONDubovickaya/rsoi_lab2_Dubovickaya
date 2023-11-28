@@ -4,7 +4,6 @@ from cars.models.modelsClass import CarsModel
 
 postcarb = Blueprint('post_car_order', __name__, )
 
-
 @postcarb.route('/api/v1/cars/<string:carUid>/order', methods=['POST'])
 async def post_car_order(carUid: str) -> Response:
     try:
