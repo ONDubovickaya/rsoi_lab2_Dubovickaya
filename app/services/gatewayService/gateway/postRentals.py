@@ -4,7 +4,7 @@ import datetime
 
 from quart import Blueprint, Response, request
 from .serviceOrders import get_data_from_service, post_data_from_service, delete_data_from_service
-
+"""
 CARS_SERVICE_HOST = os.environ['CARS_SERVICE_HOST']
 CARS_SERVICE_PORT = os.environ['CARS_SERVICE_PORT']
 RENTAL_SERVICE_HOST = os.environ['RENTAL_SERVICE_HOST']
@@ -57,7 +57,7 @@ async def post_rentals() -> Response:
             content_type='application/json',
             response=json.dumps(errors)
         )
-    """
+    
     if 'X-User-Name' not in request.headers:
         return Response(
             status=400,
@@ -72,7 +72,7 @@ async def post_rentals() -> Response:
             content_type='application/json',
             response=json.dumps({"errors": ["wrong structure"]})
         )
-    """
+    
     car_order_url = f"http://{CARS_SERVICE_HOST}:{CARS_SERVICE_PORT}/api/v1/cars/{body['carUid']}/order"
     car_order_response = get_data_from_service(car_order_url, timeout=5)
     
@@ -267,4 +267,4 @@ async def post_rentals() -> Response:
         content_type='application/json',
         response=json.dumps(rental)
     )
-    """
+    
