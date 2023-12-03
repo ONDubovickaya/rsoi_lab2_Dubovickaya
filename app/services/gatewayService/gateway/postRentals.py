@@ -3,11 +3,103 @@ import json
 import datetime
 
 from quart import Blueprint, Response, request
-from .serviceOrders import post_data_from_service, delete_data_from_service
+from .serviceOrders import get_data_from_service, post_data_from_service, delete_data_from_service
+
+CARS_SERVICE_HOST = os.environ['CARS_SERVICE_HOST']
+CARS_SERVICE_PORT = os.environ['CARS_SERVICE_PORT']
+RENTAL_SERVICE_HOST = os.environ['RENTAL_SERVICE_HOST']
+RENTAL_SERVICE_PORT = os.environ['RENTAL_SERVICE_PORT']
+PAYMENT_SERVICE_HOST = os.environ['PAYMENT_SERVICE_HOST']
+PAYMENT_SERVICE_PORT = os.environ['PAYMENT_SERVICE_PORT']
 
 postrentalsb = Blueprint('post_rentals', __name__, )
+@postrentalsb.route('/api/v1/rental/', methods=['POST'])
+async def post_rentals() -> Response:
+    if 'X-User-Name' not in request.headers:
+        return Response(
+            status=400,
+            content_type='application/json',
+            response=json.dumps({"errors": ["wrong user name"]})
+        )
 
+    body = await request.get_json()
+    if not body or 'carUid' not in body or 'dateFrom' not in body or 'dateTo' not in body:
+        return Response(
+            status=400,
+            content_type='application/json',
+            response=json.dumps({"errors": ["wrong structure"]})
+        )
 
+    car_order_url = f"http://{CARS_SERVICE_HOST}:{CARS_SERVICE_PORT}/api/v1/cars/{body['carUid']}/order"
+    car_order_response = get_data_from_service(car_order_url, timeout=5)
+    
+    if car_order_response is None:
+        return Response(
+            status=500,
+            content_type='application/json',
+            response=json.dumps({"errors": ["service not working"]})
+        )
+
+    if car_order_response.status_code == 404 or car_order_response.status_code == 403:
+        return Response(
+            status=car_order_response.status_code,
+            content_type='application/json',
+            response=car_order_response.text
+        )
+
+    car = car_order_response.json()
+    price = (datetime.datetime.strptime(body['dateTo'], "%Y-%m-%d").date() - datetime.datetime.strptime(body['dateFrom'], "%Y-%m-%d").date()).days * car['price']
+
+    payment_url = f"http://{PAYMENT_SERVICE_HOST}:{PAYMENT_SERVICE_PORT}/api/v1/payment/"
+    payment_response = post_data_from_service(payment_url, timeout=5, json={"price": price})
+
+    if payment_response is None:
+        rollback_url = f"http://{CARS_SERVICE_HOST}:{CARS_SERVICE_PORT}/api/v1/cars/{body['carUid']}/order"
+        delete_data_from_service(rollback_url, timeout=5)
+
+        return Response(
+            status=500,
+            content_type='application/json',
+            response=json.dumps({"errors": ["service not working"]})
+        )
+
+    payment = payment_response.json()
+    body['paymentUid'] = payment['paymentUid']
+
+    rental_url = f"http://{RENTAL_SERVICE_HOST}:{RENTAL_SERVICE_PORT}/api/v1/rental/"
+    rental_response = post_data_from_service(rental_url, timeout=5, json=body, headers={'X-User-Name': request.headers['X-User-Name']})
+
+    if rental_response is None:
+        rollback_url = f"http://{CARS_SERVICE_HOST}:{CARS_SERVICE_PORT}/api/v1/cars/{body['carUid']}/order"
+        delete_data_from_service(rollback_url, timeout=5)
+
+        rollback_url = f"http://{PAYMENT_SERVICE_HOST}:{PAYMENT_SERVICE_PORT}/api/v1/payment/{body['paymentUid']}"
+        delete_data_from_service(rollback_url, timeout=5)
+
+        return Response(
+            status=500,
+            content_type='application/json',
+            response=json.dumps({"errors": ["service not working"]})
+        )
+
+    if rental_response.status_code != 200:
+        return Response(
+            status=rental_response.status_code,
+            content_type='application/json',
+            response=rental_response.text
+        )
+
+    rental = rental_response.json()
+
+    rental['payment'] = payment
+    del rental['paymentUid']
+
+    return Response(
+        status=200,
+        content_type='application/json',
+        response=json.dumps(rental)
+    )
+"""
 def validate_body(body):
     try:
         body = json.loads(body)
@@ -132,3 +224,4 @@ async def post_rentals() -> Response:
         content_type='application/json',
         response=json.dumps(rental)
     )
+    """
