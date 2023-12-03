@@ -168,6 +168,7 @@ def clear_headers(headers: dict) -> dict:
 
     return headers
 
+postrentalsb = Blueprint('post_rentals', __name__, )
 
 @postrentalsb.route('/api/v1/rental/', methods=['POST'])
 async def post_rentals() -> Response:
