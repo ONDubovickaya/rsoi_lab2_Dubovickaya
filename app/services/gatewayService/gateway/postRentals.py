@@ -12,16 +12,59 @@ RENTAL_SERVICE_PORT = os.environ['RENTAL_SERVICE_PORT']
 PAYMENT_SERVICE_HOST = os.environ['PAYMENT_SERVICE_HOST']
 PAYMENT_SERVICE_PORT = os.environ['PAYMENT_SERVICE_PORT']
 
+def validate_body(body):
+    try:
+        body = json.loads(body)
+    except:
+        return None, ['wrong']
+
+    errors = []
+    if 'carUid' not in body or type(body['carUid']) is not str or \
+            'dateFrom' not in body or type(body['dateFrom']) is not str or \
+            'dateTo' not in body or type(body['dateTo']) is not str:
+        return None, ['wrong structure']
+
+    return body, errors
+
+
+def clear_headers(headers: dict) -> dict:
+    technical_headers = ['Remote-Addr', 'User-Agent', 'Accept', 'Postman-Token', 'Host', 'Accept-Encoding',
+                         'Connection']
+    keys = list(headers.keys())
+    for key in keys:
+        if key in technical_headers:
+            del headers[key]
+
+    return headers
+
 postrentalsb = Blueprint('post_rentals', __name__, )
+
 @postrentalsb.route('/api/v1/rental/', methods=['POST'])
 async def post_rentals() -> Response:
+    if 'X-User-Name' not in request.headers.keys():
+        return Response(
+            status=400,
+            content_type='application/json',
+            response=json.dumps({
+                'errors': ['wrong user name']
+            })
+        )
+
+    body, errors = validate_body(await request.body)
+    if len(errors) > 0:
+        return Response(
+            status=400,
+            content_type='application/json',
+            response=json.dumps(errors)
+        )
+    """
     if 'X-User-Name' not in request.headers:
         return Response(
             status=400,
             content_type='application/json',
             response=json.dumps({"errors": ["wrong user name"]})
         )
-
+    
     body = await request.get_json()
     if not body or 'carUid' not in body or 'dateFrom' not in body or 'dateTo' not in body:
         return Response(
@@ -29,7 +72,7 @@ async def post_rentals() -> Response:
             content_type='application/json',
             response=json.dumps({"errors": ["wrong structure"]})
         )
-
+    """
     car_order_url = f"http://{CARS_SERVICE_HOST}:{CARS_SERVICE_PORT}/api/v1/cars/{body['carUid']}/order"
     car_order_response = get_data_from_service(car_order_url, timeout=5)
     
