@@ -6,19 +6,13 @@ from quart import Blueprint, Response, request
 
 getcarsb = Blueprint('get_cars', __name__, )
 
-@getcarsb.route('/api/v1/cars', methods=['GET'])
+@getcarsb.route('/api/v1/cars/', methods=['GET'])
 async def get_cars() -> Response:
     response = requests.get(f'http://{os.environ["CARS_SERVICE_HOST"]}:{os.environ["CARS_SERVICE_PORT"]}/api/v1/cars?{request.full_path.split("?")[-1]}')
     if response:
-        return Response(
-            status=response.status_code, 
-            content_type='application/json', 
-            response=response.text)
+        return Response(status=response.status_code, content_type='application/json', response=response.text)
     else:
-        return Response(
-            status=500, 
-            content_type='application/json', 
-            response=json.dumps({'errors': ['Service not working']}))
+        return Response(status=500, content_type='application/json', response=json.dumps({'errors': ['Service not working']}))
 
 """
 @getcarsb.route('/api/v1/cars/', methods=['GET'])
